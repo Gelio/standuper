@@ -69,6 +69,28 @@ const timerTickMs = 200;
 
 function noop() {}
 
+/**
+ * A type-narrowing function that can be used in `Show`'s or `Match`'s `when`
+ * prop to narrow down the type of the value.
+ *
+ * @example
+ * ```tsx
+ * <Show when={valueMatches(state(), (s) => s.type === "running" || s.type === "paused")}>
+ *   {(state) => /* state is now narrowed to running or paused *\/}
+ * </Show>
+ * ```
+ */
+function valueMatches<T, U extends T>(
+  value: T,
+  predicate: (value: T) => value is U,
+): U | undefined {
+  if (predicate(value)) {
+    return value;
+  }
+
+  return undefined;
+}
+
 export const Timer = (props: { onTimerDone?: () => void }) => {
   const [targetSeconds, setTargetSeconds] = createSignal(initialTargetSeconds);
   const [state, setState] = createSignal<TimerState>({ type: "idle" });
@@ -101,7 +123,7 @@ export const Timer = (props: { onTimerDone?: () => void }) => {
 
   return (
     <div class="border-2 rounded-md p-4">
-      {state().type === "idle" && (
+      <Show when={state().type === "idle"}>
         <div class="flex flex-col gap-4">
           <div>
             <input
@@ -130,48 +152,57 @@ export const Timer = (props: { onTimerDone?: () => void }) => {
             </button>
           </div>
         </div>
-      )}
+      </Show>
 
-      {(state().type === "running" || state().type === "paused") && (
-        <div class="flex flex-col gap-4">
-          <div>{Math.ceil(state().secondsLeft)}</div>
+      <Show
+        when={valueMatches(
+          state(),
+          (s) => s.type === "running" || s.type === "paused",
+        )}
+      >
+        {(state) => (
+          <div class="flex flex-col gap-4">
+            <div>{Math.ceil(state().secondsLeft)}</div>
 
-          <div class="flex gap-4">
-            <Show when={state().type === "running"}>
+            <div class="flex gap-4">
+              <Show when={valueMatches(state(), (s) => s.type === "running")}>
+                {(state) => (
+                  <button
+                    class="bg-blue-500 text-white px-4 py-2 rounded"
+                    onClick={() => setState(pausedTimer(state()))}
+                  >
+                    Pause Timer
+                  </button>
+                )}
+              </Show>
+              <Show when={state().type === "paused"}>
+                <button
+                  class="bg-blue-500 text-white px-4 py-2 rounded"
+                  onClick={() =>
+                    setState({
+                      type: "running",
+                      secondsLeft: state().secondsLeft,
+                      lastUpdateTime: Date.now(),
+                    })
+                  }
+                >
+                  Resume Timer
+                </button>
+              </Show>
               <button
                 class="bg-blue-500 text-white px-4 py-2 rounded"
-                onClick={() => setState(pausedTimer(state()))}
+                onClick={() => {
+                  setState({ type: "idle" });
+                }}
               >
-                Pause Timer
+                Reset Timer
               </button>
-            </Show>
-            <Show when={state().type === "paused"}>
-              <button
-                class="bg-blue-500 text-white px-4 py-2 rounded"
-                onClick={() =>
-                  setState({
-                    type: "running",
-                    secondsLeft: state().secondsLeft,
-                    lastUpdateTime: Date.now(),
-                  })
-                }
-              >
-                Resume Timer
-              </button>
-            </Show>
-            <button
-              class="bg-blue-500 text-white px-4 py-2 rounded"
-              onClick={() => {
-                setState({ type: "idle" });
-              }}
-            >
-              Reset Timer
-            </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </Show>
 
-      {state().type === "done" && (
+      <Show when={state().type === "done"}>
         <div class="flex flex-col gap-4">
           <div>0</div>
           <div class="flex gap-4">
@@ -185,7 +216,7 @@ export const Timer = (props: { onTimerDone?: () => void }) => {
             </button>
           </div>
         </div>
-      )}
+      </Show>
     </div>
   );
 };
