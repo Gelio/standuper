@@ -1,6 +1,10 @@
 import { createMemo, onCleanup } from "solid-js";
 import { calculateSecondsElapsed, type TimerState } from "./state";
 import { TimerUI } from "./ui";
+import { focusOnMount } from "../focus-on-mount";
+
+// NOTE: prevent tree-shaking away the directive from this module
+focusOnMount;
 
 /** How often the timer should tick and update the seconds left */
 const timerTickMs = 20;
@@ -33,6 +37,7 @@ export const RunningTimer = (props: {
           <button
             class="bg-blue-500 text-white px-4 py-2 rounded"
             onClick={() => props.setState(pausedTimer(props.state))}
+            use:focusOnMount
           >
             Pause Timer
           </button>

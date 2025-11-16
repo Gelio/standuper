@@ -3,8 +3,12 @@ import type { TimerState } from "./timer/state";
 import { valueMatches } from "./util";
 import { RunningTimer } from "./timer/running";
 import { TimerUI } from "./timer/ui";
+import { focusOnMount } from "./focus-on-mount";
 
 const initialTargetSeconds = 5;
+
+// NOTE: prevent tree-shaking away the directive from this module
+focusOnMount;
 
 export const Timer = (props: { onTimerDone?: () => void }) => {
   const [targetSeconds, setTargetSeconds] = createSignal(initialTargetSeconds);
@@ -75,6 +79,7 @@ export const Timer = (props: { onTimerDone?: () => void }) => {
                       lastUpdateTime: Date.now(),
                     })
                   }
+                  use:focusOnMount
                 >
                   Resume Timer
                 </button>
