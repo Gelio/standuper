@@ -1,4 +1,4 @@
-import { createEffect, createSignal, Show } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import type { TimerState } from "./timer/state";
 import { valueMatches } from "./util";
 import { RunningTimer } from "./timer/running";
@@ -9,15 +9,6 @@ const initialTargetSeconds = 5;
 export const Timer = (props: { onTimerDone?: () => void }) => {
   const [targetSeconds, setTargetSeconds] = createSignal(initialTargetSeconds);
   const [state, setState] = createSignal<TimerState>({ type: "idle" });
-
-  createEffect(() => {
-    const currentState = state();
-    switch (currentState.type) {
-      case "running": {
-        break;
-      }
-    }
-  });
 
   return (
     <div class="border-2 rounded-md p-4">
