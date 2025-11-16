@@ -43,6 +43,7 @@ jobs:
         with:
           bun-version: ${{ env.BUN_VERSION }}
       - run: bun install
+      - run: bun x playwright install
       - run: bun run test:browser
 
   build:
