@@ -1,9 +1,9 @@
-import { afterEach, expect, test } from "vitest";
+import { beforeEach, expect, test } from "vitest";
 import { page } from "vitest/browser";
 import { cleanup, render } from "@solidjs/testing-library";
 import App from "./App";
 
-afterEach(() => {
+beforeEach(() => {
   cleanup();
 });
 
