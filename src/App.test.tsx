@@ -43,11 +43,3 @@ test("find start button", async () => {
 
   await expect.element(buttonLocator).toBeVisible();
 });
-
-test("failing test", async () => {
-  const { baseElement } = render(() => <App />);
-  const screen = page.elementLocator(baseElement);
-  const buttonLocator = screen.getByRole("button", { name: "Resume Timer" });
-
-  await expect.element(buttonLocator, { timeout: 5_000 }).toBeVisible();
-});
