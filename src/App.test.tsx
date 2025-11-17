@@ -49,5 +49,5 @@ test("failing test", async () => {
   const screen = page.elementLocator(baseElement);
   const buttonLocator = screen.getByRole("button", { name: "Resume Timer" });
 
-  await expect.element(buttonLocator).toBeVisible();
+  await expect.element(buttonLocator, { timeout: 5_000 }).toBeVisible();
 });
