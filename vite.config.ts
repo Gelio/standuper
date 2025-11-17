@@ -20,6 +20,7 @@ export default defineConfig({
           include: ["src/**/*.test.tsx"],
           browser: {
             enabled: true,
+            testerHtmlPath: "./index.test.html",
             provider: playwright(),
             // https://vitest.dev/guide/browser/playwright
             instances: [{ browser: "chromium" }],
