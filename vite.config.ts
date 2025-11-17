@@ -24,6 +24,10 @@ export default defineConfig({
             provider: playwright(),
             // https://vitest.dev/guide/browser/playwright
             instances: [{ browser: "chromium" }],
+            trace: {
+              mode: "retain-on-failure",
+              tracesDir: "./vitest-traces",
+            },
           },
         },
       },
