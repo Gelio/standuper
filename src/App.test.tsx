@@ -1,9 +1,9 @@
 import { expect, it } from "vitest";
-import { render, screen } from "@solidjs/testing-library";
+import { render } from "@solidjs/testing-library";
 import App from "./App";
 
 it("renders a button", () => {
-  const result = render(() => <App />);
+  const { getByRole } = render(() => <App />);
 
-  expect(screen.getByRole("button")).toBeDefined();
+  expect(getByRole("button")).toBeDefined();
 });
