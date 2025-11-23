@@ -1,5 +1,15 @@
-import { createMemo, createSignal, Match, Switch } from "solid-js";
-import type { TimerState } from "./timer/state";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  Match,
+  Switch,
+} from "solid-js";
+import {
+  getInitialTargetSeconds,
+  saveInitialTargetSeconds,
+  type TimerState,
+} from "./timer/state";
 import { focusOnMount } from "./focus-on-mount";
 import { TimerProgress } from "./timer/progress";
 import { Button } from "./components/button";
@@ -9,12 +19,12 @@ import { RunningTimerButtons } from "./timer/running";
 import { PausedTimerButtons } from "./timer/paused";
 import { DoneTimerButtons } from "./timer/done";
 
-const initialTargetSeconds = 5;
-
 // NOTE: prevent tree-shaking away the directive from this module
 focusOnMount;
 
 export const Timer = (props: { onTimerDone?: () => void }) => {
+  const initialTargetSeconds = getInitialTargetSeconds();
+
   const [targetSecondsRaw, setTargetSecondsRaw] = createSignal(
     initialTargetSeconds.toString(),
   );
@@ -27,6 +37,10 @@ export const Timer = (props: { onTimerDone?: () => void }) => {
     }
   }, initialTargetSeconds);
   const [state, setState] = createSignal<TimerState>({ type: "idle" });
+
+  createEffect(() => {
+    saveInitialTargetSeconds(targetSeconds());
+  });
 
   let targetSecondsInputRef: HTMLInputElement | undefined;
   const {
