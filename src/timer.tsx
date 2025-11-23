@@ -61,7 +61,7 @@ export const Timer = (props: { onTimerDone?: () => void }) => {
   } satisfies Partial<Record<TimerState["type"], Intl.NumberFormat>>;
 
   return (
-    <div class="border-2 rounded-md p-4 flex flex-col gap-4">
+    <div class="border-2 rounded-md p-4 flex flex-col gap-4 bg-zinc-100">
       <Switch>
         <Match when={state().type === "idle"}>
           <div class="text-3xl mx-auto">

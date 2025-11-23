@@ -10,10 +10,12 @@ export function TimerProgress(props: {
   );
 
   return (
-    <div class="flex w-full h-6 bg-gray-400 rounded">
+    <div class="flex w-full h-10 bg-orange-100 border border-orange-300 rounded">
       <div
-        class="h-full bg-green-500 rounded transition-all"
-        style={{ width: `${progressPercentage()}%` }}
+        class="h-full w-full bg-linear-to-r from-teal-500 to-sky-600 rounded transition-all duration-75"
+        style={{
+          "clip-path": `rect(auto ${progressPercentage()}% auto auto)`,
+        }}
       ></div>
     </div>
   );
