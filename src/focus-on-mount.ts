@@ -1,4 +1,4 @@
-import { onMount } from "solid-js";
+import { onMount, type Accessor } from "solid-js";
 
 /**
  * A SolidJS directive that focuses the given element when it is mounted.
@@ -15,4 +15,16 @@ declare module "solid-js" {
       focusOnMount: typeof focusOnMount;
     }
   }
+}
+
+/**
+ * WORKAROUND: use a ref to focus the element on mount.
+ *
+ * Cannot use the {@link focusOnMount} directive with custom components.
+ * https://github.com/solidjs/solid/discussions/722
+ */
+export function focusOnMountFn(element: Accessor<HTMLElement | undefined>) {
+  onMount(() => {
+    element()?.focus();
+  });
 }

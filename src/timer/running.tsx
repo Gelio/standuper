@@ -1,18 +1,14 @@
-import { createMemo, onCleanup } from "solid-js";
+import { onCleanup, type Setter } from "solid-js";
 import { calculateSecondsElapsed, type TimerState } from "./state";
-import { TimerUI } from "./ui";
-import { focusOnMount } from "../focus-on-mount";
-
-// NOTE: prevent tree-shaking away the directive from this module
-focusOnMount;
+import { Button } from "../components/button";
+import { focusOnMountFn } from "../focus-on-mount";
 
 /** How often the timer should tick and update the seconds left */
 const timerTickMs = 20;
 
-export const RunningTimer = (props: {
-  targetSeconds: number;
+export const RunningTimerButtons = (props: {
   state: Extract<TimerState, { type: "running" }>;
-  setState: (state: TimerState) => void;
+  setState: Setter<TimerState>;
   onTimerDone?: () => void;
 }) => {
   const interval = setInterval(() => {
@@ -24,35 +20,28 @@ export const RunningTimer = (props: {
   }, timerTickMs);
   onCleanup(() => clearInterval(interval));
 
-  const progressPercentage = createMemo(
-    () => (1 - props.state.secondsLeft / props.targetSeconds) * 100,
-  );
+  let pauseButtonRef: HTMLButtonElement | undefined;
+  focusOnMountFn(() => pauseButtonRef);
 
   return (
-    <TimerUI
-      seconds={Math.ceil(props.state.secondsLeft)}
-      progressPercentage={progressPercentage()}
-      buttons={
-        <div class="flex gap-4">
-          <button
-            class="bg-blue-500 text-white px-4 py-2 rounded"
-            onClick={() => props.setState(pausedTimer(props.state))}
-            use:focusOnMount
-          >
-            Pause Timer
-          </button>
+    <>
+      <Button
+        class="flex-1"
+        onClick={() => props.setState(pausedTimer(props.state))}
+        ref={pauseButtonRef}
+      >
+        Pause Timer
+      </Button>
 
-          <button
-            class="bg-blue-500 text-white px-4 py-2 rounded"
-            onClick={() => {
-              props.setState({ type: "idle" });
-            }}
-          >
-            Reset Timer
-          </button>
-        </div>
-      }
-    />
+      <Button
+        class="flex-1"
+        onClick={() => {
+          props.setState({ type: "idle" });
+        }}
+      >
+        Reset Timer
+      </Button>
+    </>
   );
 };
 

@@ -1,9 +1,13 @@
-import { createSignal, Show } from "solid-js";
+import { createMemo, createSignal, Match, Switch } from "solid-js";
 import type { TimerState } from "./timer/state";
-import { valueMatches } from "./util";
-import { RunningTimer } from "./timer/running";
-import { TimerUI } from "./timer/ui";
 import { focusOnMount } from "./focus-on-mount";
+import { TimerProgress } from "./timer/progress";
+import { Button } from "./components/button";
+import { createIdleStateHandlers } from "./timer/idle";
+import { valueMatches } from "./util";
+import { RunningTimerButtons } from "./timer/running";
+import { PausedTimerButtons } from "./timer/paused";
+import { DoneTimerButtons } from "./timer/done";
 
 const initialTargetSeconds = 5;
 
@@ -11,108 +15,130 @@ const initialTargetSeconds = 5;
 focusOnMount;
 
 export const Timer = (props: { onTimerDone?: () => void }) => {
-  const [targetSeconds, setTargetSeconds] = createSignal(initialTargetSeconds);
+  const [targetSecondsRaw, setTargetSecondsRaw] = createSignal(
+    initialTargetSeconds.toString(),
+  );
+  const targetSeconds = createMemo((previousTargetSeconds): number => {
+    const parsedCurrentValue = parseInt(targetSecondsRaw(), 10);
+    if (Number.isNaN(parsedCurrentValue)) {
+      return previousTargetSeconds;
+    } else {
+      return parsedCurrentValue;
+    }
+  }, initialTargetSeconds);
   const [state, setState] = createSignal<TimerState>({ type: "idle" });
 
+  let targetSecondsInputRef: HTMLInputElement | undefined;
+  const {
+    secondsInputWidth,
+    synchronizeInputIfMalformed,
+    tryStartTimerIfValid,
+  } = createIdleStateHandlers({
+    targetSecondsRaw,
+    targetSecondsInputRef: () => targetSecondsInputRef,
+    setTargetSecondsRaw,
+    targetSeconds,
+    setState,
+  });
+  const locale = "en-US";
+  const sharedNumberFormatOptions: Intl.NumberFormatOptions = {
+    style: "unit",
+    unit: "second",
+    unitDisplay: "long",
+  };
+  const secondsLeftFormat = {
+    paused: new Intl.NumberFormat(locale, {
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 2,
+      ...sharedNumberFormatOptions,
+    }),
+    running: new Intl.NumberFormat(locale, {
+      // Do not show fraction digits, since it is distracting when the timer is running.
+      maximumFractionDigits: 0,
+      roundingMode: "ceil",
+      ...sharedNumberFormatOptions,
+    }),
+  } satisfies Partial<Record<TimerState["type"], Intl.NumberFormat>>;
+
   return (
-    <div class="border-2 rounded-md p-4">
-      <Show when={state().type === "idle"}>
-        <TimerUI
-          seconds={
-            <div>
-              <input
-                value={targetSeconds()}
-                oninput={(e) =>
-                  setTargetSeconds(parseInt(e.currentTarget.value) || 0)
-                }
-                type="number"
-                class="border p-2 rounded w-20 mr-4"
-              />{" "}
-              seconds
-            </div>
-          }
-          progressPercentage={0}
-          buttons={
-            <div>
-              <button
-                class="bg-blue-500 text-white px-4 py-2 rounded"
-                onClick={() =>
-                  setState({
-                    type: "running",
-                    secondsLeft: targetSeconds(),
-                    lastUpdateTime: Date.now(),
-                  })
-                }
-              >
-                Start Timer
-              </button>
-            </div>
-          }
-        />
-      </Show>
-
-      <Show when={valueMatches(state(), (s) => s.type === "running")}>
-        {(state) => (
-          <RunningTimer
-            targetSeconds={targetSeconds()}
-            state={state()}
-            setState={setState}
-            onTimerDone={props.onTimerDone}
-          />
-        )}
-      </Show>
-      <Show when={valueMatches(state(), (s) => s.type === "paused")}>
-        {(state) => (
-          <TimerUI
-            seconds={Math.ceil(state().secondsLeft)}
-            progressPercentage={
-              (1 - state().secondsLeft / targetSeconds()) * 100
-            }
-            buttons={
-              <div class="flex gap-4">
-                <button
-                  class="bg-blue-500 text-white px-4 py-2 rounded"
-                  onClick={() =>
-                    setState({
-                      type: "running",
-                      secondsLeft: state().secondsLeft,
-                      lastUpdateTime: Date.now(),
-                    })
-                  }
-                  use:focusOnMount
-                >
-                  Resume Timer
-                </button>
-
-                <button
-                  class="bg-blue-500 text-white px-4 py-2 rounded"
-                  onClick={() => {
-                    setState({ type: "idle" });
-                  }}
-                >
-                  Reset Timer
-                </button>
-              </div>
-            }
-          />
-        )}
-      </Show>
-
-      <Show when={state().type === "done"}>
-        <div class="flex flex-col gap-4">
-          <div>0</div>
-          <div class="flex gap-4">
-            <button
-              class="bg-blue-500 text-white px-4 py-2 rounded"
-              onClick={() => {
-                setState({ type: "idle" });
+    <div class="border-2 rounded-md p-4 flex flex-col gap-4">
+      <Switch>
+        <Match when={state().type === "idle"}>
+          <div class="text-3xl mx-auto">
+            <input
+              ref={targetSecondsInputRef}
+              // TODO: consider making this input uncontrolled. Use just
+              // `targetSecondsInputRef` and remove these `value` and `oninput` props.
+              value={targetSecondsRaw()}
+              oninput={(e) => setTargetSecondsRaw(e.currentTarget.value)}
+              onblur={() => {
+                synchronizeInputIfMalformed();
               }}
-            >
-              Reset Timer
-            </button>
+              onkeydown={(e) => {
+                if (e.key === "Enter") {
+                  tryStartTimerIfValid();
+                  e.preventDefault();
+                }
+              }}
+              class="border bg-stone-100 border-teal-700 p-2 rounded mr-4"
+              style={{ width: secondsInputWidth() }}
+              use:focusOnMount
+            />
+            seconds
           </div>
-        </div>
-      </Show>
+        </Match>
+
+        <Match
+          when={valueMatches(
+            state(),
+            (s) => s.type === "running" || s.type === "paused",
+          )}
+        >
+          {(state) => (
+            <div class="text-3xl mx-auto">
+              <div>
+                {secondsLeftFormat[state().type].format(state().secondsLeft)}
+              </div>
+            </div>
+          )}
+        </Match>
+
+        <Match when={state().type === "done"}>
+          <div class="text-3xl mx-auto">Time's up!</div>
+        </Match>
+      </Switch>
+
+      <TimerProgress state={state()} targetSeconds={targetSeconds()} />
+
+      <div class="text-3xl flex gap-4">
+        <Switch>
+          <Match when={state().type === "idle"}>
+            <Button class="w-full" onClick={() => tryStartTimerIfValid()}>
+              Start Timer
+            </Button>
+          </Match>
+
+          <Match when={valueMatches(state(), (s) => s.type === "running")}>
+            {(state) => (
+              <RunningTimerButtons
+                state={state()}
+                setState={setState}
+                onTimerDone={props.onTimerDone}
+              />
+            )}
+          </Match>
+
+          <Match when={valueMatches(state(), (s) => s.type === "paused")}>
+            {(state) => (
+              <PausedTimerButtons setState={setState} state={state()} />
+            )}
+          </Match>
+
+          <Match when={state().type === "done"}>
+            <DoneTimerButtons setState={setState} />
+          </Match>
+        </Switch>
+      </div>
     </div>
   );
 };
