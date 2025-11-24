@@ -10,9 +10,19 @@ export function TimerProgress(props: {
   );
 
   return (
-    <div class="flex w-full h-10 bg-orange-100 border border-orange-300 rounded">
+    <div
+      class="flex w-full h-10 border border-orange-300 rounded transition-colors duration-200"
+      classList={{
+        "bg-orange-100": props.state.type === "running",
+        "bg-stone-300":
+          props.state.type === "paused" || props.state.type === "idle",
+      }}
+    >
       <div
         class="h-full w-full bg-linear-to-r from-teal-500 to-sky-600 rounded transition-all duration-75"
+        classList={{
+          "animate-pulse": props.state.type === "done",
+        }}
         style={{
           "clip-path": `rect(auto ${progressPercentage()}% auto auto)`,
         }}
