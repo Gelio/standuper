@@ -2,16 +2,40 @@ import { For } from "solid-js";
 import { Box } from "./components/box";
 import { createStore, type SetStoreFunction } from "solid-js/store";
 import { Button } from "./components/button";
+import z from "zod";
 
 type Person = {
   element: HTMLInputElement | undefined;
+  initialName?: string;
 };
 
 export function People() {
-  const [people, setPeople] = createStore<Person[]>([{ element: undefined }]);
+  const [people, setPeopleRaw] = createStore<Person[]>(getInitialPeople());
+  const setPeople: typeof setPeopleRaw = (...args: unknown[]) => {
+    debouncedSaveNamesToLocalStorage();
+    return setPeopleRaw(
+      ...// WORKAROUND: TypeScript has a hard time understanding store setter args type
+      // SAFETY: there is a `typeof setPeopleRaw` type definition, so params must match
+      (args as [any]),
+    );
+  };
 
   function shufflePeople() {
     setPeople((p) => toShuffled(p));
+  }
+
+  let saveTimeout: number | undefined;
+  const saveDebounceMs = 500;
+  function debouncedSaveNamesToLocalStorage() {
+    if (saveTimeout) {
+      clearTimeout(saveTimeout);
+    }
+
+    saveTimeout = window.setTimeout(() => {
+      const names = people.map((person) => person.element?.value ?? "");
+      savePeopleNamesToLocalStorage(names);
+      saveTimeout = undefined;
+    }, saveDebounceMs);
   }
 
   return (
@@ -23,10 +47,30 @@ export function People() {
           Shuffle
         </Button>
 
-        <PeopleList people={people} setPeople={setPeople} />
+        <PeopleList
+          people={people}
+          setPeople={setPeople}
+          onNameChange={debouncedSaveNamesToLocalStorage}
+        />
       </div>
     </Box>
   );
+}
+
+function getInitialPeople(): Person[] {
+  const maybeInitialNames = loadPeopleNamesFromLocalStorage();
+  const initialEmptyPerson: Person = { element: undefined };
+
+  const initialPeople: Person[] = maybeInitialNames
+    ? maybeInitialNames.map(
+        (name): Person => ({
+          element: undefined,
+          initialName: name,
+        }),
+      )
+    : [initialEmptyPerson];
+
+  return initialPeople;
 }
 
 function toShuffled<T>(array: T[]): T[] {
@@ -48,6 +92,7 @@ function toShuffled<T>(array: T[]): T[] {
 function PeopleList(props: {
   people: Person[];
   setPeople: SetStoreFunction<Person[]>;
+  onNameChange?: (personIndex: number) => void;
 }) {
   function insertPerson(index: number) {
     props.setPeople((people) =>
@@ -75,6 +120,12 @@ function PeopleList(props: {
               class="w-full rounded border-b border-gray-300 focus:border-blue-500 focus:outline-none p-1 bg-blue-100"
               ref={(element) => {
                 props.setPeople(index(), "element", element);
+                if (person.initialName) {
+                  element.value = person.initialName;
+                }
+              }}
+              oninput={(e) => {
+                props.onNameChange?.(index());
               }}
               onkeydown={(e) => {
                 if (e.key === "Enter") {
@@ -108,4 +159,37 @@ function PeopleList(props: {
       </For>
     </ul>
   );
+}
+
+const peopleNamesLocalStorageKey = "people-names";
+const peopleNamesSchema = z.array(z.string());
+
+function loadPeopleNamesFromLocalStorage(): string[] | undefined {
+  const json = localStorage.getItem(peopleNamesLocalStorageKey);
+  if (!json) {
+    return undefined;
+  }
+
+  let data: unknown;
+  try {
+    data = JSON.parse(json);
+  } catch (error) {
+    console.warn("Failed to parse people names from localStorage", error);
+    return undefined;
+  }
+
+  const parseResult = peopleNamesSchema.safeParse(data);
+  if (!parseResult.success) {
+    console.warn(
+      "Invalid people names data in localStorage",
+      parseResult.error,
+    );
+    return undefined;
+  }
+
+  return parseResult.data;
+}
+function savePeopleNamesToLocalStorage(names: string[]) {
+  const json = JSON.stringify(names);
+  localStorage.setItem(peopleNamesLocalStorageKey, json);
 }
