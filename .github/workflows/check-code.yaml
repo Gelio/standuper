@@ -114,7 +114,7 @@ jobs:
       - uses: actions/cache/restore@v4
         with: *cacheRestore
       - run: bun install
-      - run: bun run build
+      - run: bun run build --base=/standuper/
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist/
