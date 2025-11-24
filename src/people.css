@@ -1,0 +1,3 @@
+::view-transition-group(.shuffle-list) {
+  animation-timing-function: ease-in-out;
+}

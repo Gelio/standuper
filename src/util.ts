@@ -19,3 +19,21 @@ export function valueMatches<T, U extends T>(
 
   return undefined;
 }
+
+/**
+ * Starts a view transition if supported by the browser.
+ * If not, runs the callback immediately.
+ */
+export function startViewTransition(
+  callback: () => void,
+): Pick<ViewTransition, "updateCallbackDone" | "finished"> {
+  if (document.startViewTransition) {
+    return document.startViewTransition(callback);
+  } else {
+    callback();
+    return {
+      updateCallbackDone: Promise.resolve(),
+      finished: Promise.resolve(),
+    };
+  }
+}

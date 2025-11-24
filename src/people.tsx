@@ -3,6 +3,8 @@ import { Box } from "./components/box";
 import { createStore, type SetStoreFunction } from "solid-js/store";
 import { Button } from "./components/button";
 import z from "zod";
+import "./people.css";
+import { startViewTransition } from "./util";
 
 type Person = {
   element: HTMLInputElement | undefined;
@@ -21,7 +23,9 @@ export function People() {
   };
 
   function shufflePeople() {
-    setPeople((p) => toShuffled(p));
+    startViewTransition(() => {
+      setPeople((p) => toShuffled(p));
+    });
   }
 
   let saveTimeout: number | undefined;
@@ -95,12 +99,16 @@ function PeopleList(props: {
   onNameChange?: (personIndex: number) => void;
 }) {
   function insertPerson(index: number) {
-    props.setPeople((people) =>
-      people.toSpliced(index, 0, { element: undefined }),
-    );
+    return startViewTransition(() => {
+      props.setPeople((people) =>
+        people.toSpliced(index, 0, { element: undefined }),
+      );
+    });
   }
   function removePerson(index: number) {
-    props.setPeople((people) => people.toSpliced(index, 1));
+    return startViewTransition(() => {
+      props.setPeople((people) => people.toSpliced(index, 1));
+    });
   }
   function focusPersonNameInput(index: number) {
     const person = props.people[index];
@@ -114,7 +122,13 @@ function PeopleList(props: {
     <ul class="list-disc pl-6 flex flex-col gap-2">
       <For each={props.people}>
         {(person, index) => (
-          <li>
+          <li
+            style={{
+              "view-transition-name": "match-element",
+              // @ts-expect-error SolidJS types do not yet include view transition classes
+              "view-transition-class": "shuffle-list",
+            }}
+          >
             <input
               type="text"
               class="w-full rounded border-b border-gray-300 focus:border-blue-500 focus:outline-none p-1 bg-blue-100"
@@ -124,23 +138,25 @@ function PeopleList(props: {
                   element.value = person.initialName;
                 }
               }}
-              oninput={(e) => {
+              oninput={(_e) => {
                 props.onNameChange?.(index());
               }}
               onkeydown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
                   const newRowIndex = index() + 1;
-                  insertPerson(newRowIndex);
-                  focusPersonNameInput(newRowIndex);
+                  insertPerson(newRowIndex).updateCallbackDone.then(() => {
+                    focusPersonNameInput(newRowIndex);
+                  });
                 } else if (
                   (e.key === "Backspace" || e.key === "Delete") &&
                   person.element?.value === "" &&
                   props.people.length > 1
                 ) {
-                  console.log("deleting");
-                  removePerson(index());
-                  focusPersonNameInput(Math.max(index() - 1, 0));
+                  console.log(person.element?.textContent);
+                  removePerson(index()).updateCallbackDone.then(() => {
+                    focusPersonNameInput(Math.max(index() - 1, 0));
+                  });
                   e.preventDefault();
                 } else if (
                   e.key === "ArrowDown" &&
