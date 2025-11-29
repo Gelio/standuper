@@ -43,10 +43,20 @@ export function People() {
   }
 
   return (
-    <Box>
-      <h2 class="text-2xl font-bold mb-2">People</h2>
+    <Box style={{ "view-transition-name": "people-container" }}>
+      {/* NOTE: declare separate view transition names to avoid animating the heading
+          and the list when the container grows in size */}
+      <h2
+        class="text-2xl font-bold mb-2"
+        style={{ "view-transition-name": "people-heading" }}
+      >
+        People
+      </h2>
 
-      <div class="flex flex-col gap-4">
+      <div
+        class="flex flex-col gap-4"
+        style={{ "view-transition-name": "people-list-container" }}
+      >
         <Button onclick={shufflePeople} class="self-start">
           Shuffle
         </Button>

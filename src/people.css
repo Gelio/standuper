@@ -1,3 +1,13 @@
 ::view-transition-group(.shuffle-list) {
   animation-timing-function: ease-in-out;
 }
+
+::view-transition-new(people-container) {
+  /* Turn off the default opacity animation */
+  animation: none;
+  height: 100%;
+}
+
+::view-transition-old(people-container) {
+  display: none;
+}
