@@ -1,0 +1,17 @@
+::view-transition-new(seconds-input) {
+  animation: none;
+  width: auto;
+}
+
+::view-transition-old(seconds-input) {
+  display: none;
+}
+
+::view-transition-old(seconds-input-container) {
+  display: none;
+}
+
+::view-transition-new(seconds-input-container) {
+  animation: none;
+  height: 100%;
+}

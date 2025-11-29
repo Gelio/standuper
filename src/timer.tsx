@@ -19,6 +19,7 @@ import { RunningTimerButtons } from "./timer/running";
 import { PausedTimerButtons } from "./timer/paused";
 import { DoneTimerButtons } from "./timer/done";
 import { Box } from "./components/box";
+import "./timer.css";
 
 // NOTE: prevent tree-shaking away the directive from this module
 focusOnMount;
@@ -80,26 +81,34 @@ export const Timer = (props: { onTimerDone?: () => void }) => {
       <Switch>
         <Match when={state().type === "idle"}>
           <div class="text-3xl mx-auto">
-            <input
-              ref={targetSecondsInputRef}
-              // TODO: consider making this input uncontrolled. Use just
-              // `targetSecondsInputRef` and remove these `value` and `oninput` props.
-              value={targetSecondsRaw()}
-              oninput={(e) => setTargetSecondsRaw(e.currentTarget.value)}
-              onblur={() => {
-                synchronizeInputIfMalformed();
-              }}
-              onkeydown={(e) => {
-                if (e.key === "Enter") {
-                  tryStartTimerIfValid();
-                  e.preventDefault();
-                }
-              }}
-              class="border bg-stone-100 border-teal-700 p-2 rounded mr-4"
-              style={{ width: secondsInputWidth() }}
-              use:focusOnMount
-            />
-            seconds
+            <span
+              style={{ "view-transition-name": "seconds-input-container" }}
+              class="border bg-stone-100 border-teal-700 p-2 rounded mr-4 focus-within:outline focus-within:outline-blue-500"
+            >
+              <input
+                ref={targetSecondsInputRef}
+                value={targetSecondsRaw()}
+                oninput={(e) => setTargetSecondsRaw(e.currentTarget.value)}
+                onblur={() => {
+                  synchronizeInputIfMalformed();
+                }}
+                onkeydown={(e) => {
+                  if (e.key === "Enter") {
+                    tryStartTimerIfValid();
+                    e.preventDefault();
+                  }
+                }}
+                class="outline-none"
+                style={{
+                  width: secondsInputWidth(),
+                  "view-transition-name": "seconds-input",
+                }}
+                use:focusOnMount
+              />
+            </span>
+            <span style={{ "view-transition-name": "seconds-suffix" }}>
+              seconds
+            </span>
           </div>
         </Match>
 

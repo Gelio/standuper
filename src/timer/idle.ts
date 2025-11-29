@@ -1,5 +1,12 @@
-import { createMemo, type Accessor, type Setter } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  type Accessor,
+  type Setter,
+} from "solid-js";
 import type { TimerState } from "./state";
+import { startViewTransition } from "../util";
 
 export function createIdleStateHandlers({
   targetSecondsRaw,
@@ -14,8 +21,18 @@ export function createIdleStateHandlers({
   setState: Setter<TimerState>;
   targetSecondsInputRef: Accessor<HTMLInputElement | undefined>;
 }) {
-  const secondsInputWidth = createMemo(() => {
-    return `clamp(100px, ${targetSecondsRaw().length * 20 + 20}px, 300px)`;
+  function getSecondsInputWidth(targetSecondsRaw: string) {
+    return `clamp(100px, ${targetSecondsRaw.length * 20 + 20}px, 300px)`;
+  }
+  const [secondsInputWidth, setSecondsInputWidth] = createSignal(
+    getSecondsInputWidth(targetSecondsRaw()),
+  );
+
+  createEffect(() => {
+    const secondsInputWidth = getSecondsInputWidth(targetSecondsRaw());
+    startViewTransition(() => {
+      setSecondsInputWidth(secondsInputWidth);
+    });
   });
 
   function startTimer() {
