@@ -104,6 +104,7 @@ export const Timer = (props: { onTimerDone?: () => void }) => {
                   "view-transition-name": "seconds-input",
                 }}
                 use:focusOnMount
+                aria-label="Duration in seconds"
               />
             </span>
             <span style={{ "view-transition-name": "seconds-suffix" }}>

@@ -1,20 +1,21 @@
 import { beforeEach, expect, test } from "vitest";
 import { page } from "vitest/browser";
 import { cleanup, render } from "@solidjs/testing-library";
-import App from "./App";
+import { Timer } from "./timer";
 
 beforeEach(() => {
   cleanup();
 });
 
 test("timer", async () => {
-  const { baseElement } = render(() => <App />);
+  const { baseElement } = render(() => <Timer />);
   const screen = page.elementLocator(baseElement);
   const startButtonLocator = screen.getByRole("button", {
     name: "Start Timer",
   });
-
   await expect.element(startButtonLocator).toBeVisible();
+
+  await screen.getByRole("textbox", { name: "Duration in seconds" }).fill("3");
   await startButtonLocator.click();
 
   {
@@ -29,17 +30,9 @@ test("timer", async () => {
       name: "Reset Timer",
     });
     await expect.element(resetButtonLocator).toBeVisible();
-    await expect.element(screen.getByText("0")).toBeVisible();
+    await expect.element(screen.getByText("Time's up!")).toBeVisible();
     await resetButtonLocator.click();
   }
 
   await expect.element(startButtonLocator).toBeVisible();
-});
-
-test("find start button", async () => {
-  const { baseElement } = render(() => <App />);
-  const screen = page.elementLocator(baseElement);
-  const buttonLocator = screen.getByRole("button", { name: "Start Timer" });
-
-  await expect.element(buttonLocator).toBeVisible();
 });
