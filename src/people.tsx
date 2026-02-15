@@ -66,6 +66,21 @@ export function People() {
           setPeople={setPeople}
           onNameChange={debouncedSaveNamesToLocalStorage}
         />
+
+        <ul
+          class="text-sm text-gray-500 list-none flex flex-col gap-1"
+          style={{ "view-transition-name": "people-keyboard-hints" }}
+        >
+          <li>
+            <kbd>↑</kbd>/<kbd>↓</kbd> — navigate through the list
+          </li>
+          <li>
+            <kbd>Enter</kbd> — add a new person
+          </li>
+          <li>
+            <kbd>Backspace</kbd>/<kbd>Delete</kbd> — remove person (when name is empty)
+          </li>
+        </ul>
       </div>
     </Box>
   );
