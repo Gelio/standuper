@@ -78,7 +78,8 @@ export function People() {
             <kbd>Enter</kbd> — add a new person
           </li>
           <li>
-            <kbd>Backspace</kbd>/<kbd>Delete</kbd> — remove person (when name is empty)
+            <kbd>Backspace</kbd>/<kbd>Delete</kbd> — remove person (when name is
+            empty)
           </li>
         </ul>
       </div>
