@@ -3,7 +3,7 @@ import { Timer } from "./timer";
 
 function App() {
   return (
-    <div class="p-10 flex flex-col gap-10">
+    <div class="p-10 flex flex-col gap-10 max-w-2xl mx-auto">
       <Timer />
       <People />
     </div>
